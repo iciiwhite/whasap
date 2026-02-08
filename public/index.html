@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <h2>My WhatsApp Web</h2>
+    <div id="status">Waiting for QR code...</div>
+    <img id="qrcode" src="" style="display:none;">
+    
+    <div id="chat-box" style="border:1px solid #ccc; height:200px; overflow-y:scroll; margin-top:20px;"></div>
+    <input id="number" placeholder="Phone (e.g. 1234567890@c.us)">
+    <input id="msg" placeholder="Type message">
+    <button onclick="send()">Send</button>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const qrImg = document.getElementById('qrcode');
+        
+        socket.on('qr', (url) => {
+            qrImg.src = url;
+            qrImg.style.display = 'block';
+            document.getElementById('status').innerText = 'Scan the QR code';
+        });
+
+        socket.on('ready', (msg) => {
+            qrImg.style.display = 'none';
+            document.getElementById('status').innerText = msg;
+        });
+
+        socket.on('message', (data) => {
+            const div = document.createElement('div');
+            div.innerText = `${data.from}: ${data.body}`;
+            document.getElementById('chat-box').appendChild(div);
+        });
+
+        function send() {
+            const to = document.getElementById('number').value;
+            const message = document.getElementById('msg').value;
+            socket.emit('send-message', { to, message });
+        }
+    </script>
+</body>
+</html>
